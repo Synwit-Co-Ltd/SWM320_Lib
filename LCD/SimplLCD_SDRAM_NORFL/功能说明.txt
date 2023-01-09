@@ -1,0 +1,1 @@
+功能说明：从NOR Flash中读取图片存入SDRAM中显示
