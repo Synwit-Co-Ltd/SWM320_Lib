@@ -33,6 +33,7 @@ SD_CardInfo SD_cardInfo;
 ******************************************************************************************************************************************/
 uint32_t SDIO_Init(uint32_t freq)
 {
+	uint32_t i;
 	uint32_t res;
 	uint32_t resp, resps[4];
 	
@@ -58,6 +59,8 @@ uint32_t SDIO_Init(uint32_t freq)
 				(0xC << SDIO_CR2_TIMEOUT_Pos);		// 2**25 SDIO_CLK
 	
 	while((SDIO->CR2 & SDIO_CR2_CLKRDY_Msk) == 0);
+	
+	for(i = 0; i < CyclesPerUs * 10 ; i++) __NOP();
 	
 	SDIO->IM = 0xFFFFFFFF;
 	
