@@ -15,6 +15,8 @@ int main(void)
 	GPIO_ClrBit(GPIOA, PIN4);
  	GPIO_SetBit(GPIOA, PIN5);
 	
+	GPIO_INIT(GPIOA, PIN5, GPIO_OUTPUT);			//同上，另一种可读性更好的写法
+	
  	while(1==1)
  	{
  		GPIO_InvBit(GPIOA, PIN4);
