@@ -9,7 +9,7 @@ int main(void)
  	SystemInit();
 	
 	SerialInit();
-	 	
+	
 	GPIO_Init(GPIOA, PIN4, 1, 0, 0);				//GPIOA.4配置为输出引脚，推挽输出
 	GPIO_Init(GPIOA, PIN5, 1, 0, 0);				//GPIOA.5配置为输出引脚，推挽输出
 	GPIO_ClrBit(GPIOA, PIN4);

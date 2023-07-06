@@ -7,7 +7,7 @@ void SerialInit(void);
 
 int main(void)
 {		
-	uint32_t i;
+	uint32_t i, val;
 	SDRAM_InitStructure SDRAM_InitStruct;
 		
 	SystemInit();
@@ -43,6 +43,27 @@ int main(void)
 	
 	printf("\r\nAfter Write: \r\n");
 	for(i = 0; i < 20; i++)	printf("0x%08X, ",  *((volatile uint32_t *) (SDRAMM_BASE + i*4)));
+
+
+#if 1  // SDRAM Chip Test
+#define SDRAM_SIZE  (0x100000 * 8)
+
+	for(i = 0; i < SDRAM_SIZE; i += 4)
+	{
+		*((volatile uint32_t *)(SDRAMM_BASE + i)) = i;
+	}
+	
+	for(i = 0; i < SDRAM_SIZE; i += 4)
+	{
+		val = *((volatile uint32_t *)(SDRAMM_BASE + i));
+		if(val != i)
+		{
+			printf("Word Test Error: 0x%08X expected, 0x%08X get\r\n", i, val);
+			while(1);
+		}
+	}
+	printf("Word Test Pass!\r\n");
+#endif
 	
 	while(1==1)
 	{
@@ -55,7 +76,7 @@ void SerialInit(void)
 	UART_InitStructure UART_initStruct;
 	
 	PORT_Init(PORTA, PIN2, FUNMUX0_UART0_RXD, 1);	//GPIOA.2配置为UART0输入引脚
-	PORT_Init(PORTC, PIN5, FUNMUX1_UART0_TXD, 0);	//GPIOA.3配置为UART0输出引脚
+	PORT_Init(PORTA, PIN3, FUNMUX1_UART0_TXD, 0);	//GPIOA.3配置为UART0输出引脚
  	
  	UART_initStruct.Baudrate = 57600;
 	UART_initStruct.DataBits = UART_DATA_8BIT;
