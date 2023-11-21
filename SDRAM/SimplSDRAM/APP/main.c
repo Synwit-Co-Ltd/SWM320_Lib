@@ -23,9 +23,9 @@ int main(void)
 	PORT->PORTM_SEL1 = 0xAAA;			//PM16 => OEN、PM17 => WEN、PM18 => NORFL_CSN、PM19 => SDRAM_CSN、PM20 => SRAM_CSN、PM21 => SDRAM_CKE
 	
 	SDRAM_InitStruct.CellSize = SDRAM_CELLSIZE_64Mb;
-	SDRAM_InitStruct.CellBank = SDRAM_CELLBANK_4;
 	SDRAM_InitStruct.CellWidth = SDRAM_CELLWIDTH_16;
 	SDRAM_InitStruct.CASLatency = SDRAM_CASLATENCY_2;
+	SDRAM_InitStruct.RefreshTime = 64;
 	SDRAM_InitStruct.TimeTMRD = SDRAM_TMRD_3;
 	SDRAM_InitStruct.TimeTRRD = SDRAM_TRRD_2;
 	SDRAM_InitStruct.TimeTRAS = SDRAM_TRAS_6;
