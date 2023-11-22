@@ -10,7 +10,8 @@ typedef struct {
 	uint8_t TimeTMRD;			// MRS to New Command
 	uint8_t TimeTRRD;			// Activate to activate on different banks
 	uint8_t TimeTRAS;			// Self refresh time，最小Self-refresh周期
-	uint8_t TimeTRC;			// Row cycle delay，Refresh命令到Activate命令间延时，也是两个连续Refresh命令间延时
+	uint8_t TimeTRC;			// Row cycle delay，Activate to activate on same bank
+								// 若 SDRAM 颗粒除了 tRC，还有 tRFC 或 tRRC 参数，则按照二者中较大的计算 TimeTRC
 	uint8_t TimeTRCD;			// Row to column delay，行地址到列地址间延时，也即Activate命令到读写命令间延时
 	uint8_t TimeTRP;			// Row precharge delay，Precharge命令到另一个命令间延时
 } SDRAM_InitStructure;

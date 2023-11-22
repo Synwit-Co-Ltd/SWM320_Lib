@@ -62,7 +62,7 @@ int main(void)
 			while(1);
 		}
 	}
-	printf("Word Test Pass!\r\n");
+	printf("\r\n\r\nWord Test Pass!\r\n");
 #endif
 	
 	while(1==1)
