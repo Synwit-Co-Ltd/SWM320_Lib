@@ -3172,4 +3172,52 @@ typedef void (* Func_void_void) (void);
 #include "SWM320_wdt.h"
 
 
+
+#ifdef  SW_LOG_RTT
+#define log_printf(...)	 	SEGGER_RTT_printf(0, __VA_ARGS__)
+#else
+#define log_printf(...)	 	printf(__VA_ARGS__)
+#endif
+
+
+#ifndef SW_LOG_LEVEL
+#define SW_LOG_LEVEL        0
+#endif
+
+#if (SW_LOG_LEVEL > 0)
+#define SW_LOG_ERR(...)    	{						 \
+							log_printf("ERROR: ");   \
+							log_printf(__VA_ARGS__); \
+							log_printf("\n");		 \
+							}
+
+#if (SW_LOG_LEVEL > 1)
+#define SW_LOG_WARN(...) 	{						 \
+							log_printf("WARN : ");   \
+							log_printf(__VA_ARGS__); \
+							log_printf("\n");		 \
+							}
+
+#if (SW_LOG_LEVEL > 2)
+#define SW_LOG_INFO(...)   	{						 \
+							log_printf("INFO : ");   \
+							log_printf(__VA_ARGS__); \
+							log_printf("\n");		 \
+							}
+#else
+#define SW_LOG_INFO(...)
+#endif
+
+#else
+#define SW_LOG_WARN(...)
+#define SW_LOG_INFO(...)
+#endif
+
+#else
+#define SW_LOG_ERR(...)
+#define SW_LOG_WARN(...)
+#define SW_LOG_INFO(...)
+#endif
+
+
 #endif //__SWM320_H__
