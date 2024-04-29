@@ -22,6 +22,25 @@
 #include "SWM320_sdio.h"
 
 
+/*  0: 无软件超时，一直查询
+ * >0: 条件查询次数，当查询 SDIO_TIMEOUT 次后，不再等待、立即返回
+ */
+#ifndef SDIO_TIMEOUT
+#define SDIO_TIMEOUT  0
+#endif
+
+
+#define wait_while(condition) {					\
+		uint32_t time = SDIO_TIMEOUT;			\
+												\
+		while(condition) {						\
+			if(SDIO_TIMEOUT && (--time == 0))	\
+				return SD_RES_TIMEOUT;			\
+		}										\
+	}
+
+
+
 SD_CardInfo SD_cardInfo;
 
 /****************************************************************************************************************************************** 
@@ -80,7 +99,7 @@ uint32_t SDIO_Init(uint32_t freq)
 		if(res != SD_RES_OK)
 			return res;
 		
-		if(resp != 0x120) return SD_RES_ERR;	//不是SD卡，可能是MMC卡
+		if((resp & SD_CS_APP_CMD) == 0) return SD_RES_ERR;
 		
 		if(SD_cardInfo.CardType == SDIO_STD_CAPACITY_SD_CARD_V2_0)
 			SDIO_SendCmd(SD_CMD_SD_APP_OP_COND, 0x80100000|0x40000000, SD_RESP_32b, &resp);
@@ -152,12 +171,12 @@ uint32_t SDIO_BlockWrite(uint32_t block_addr, uint32_t buff[])
 	if(res != SD_RES_OK)
 		return res;
 	
-    while((SDIO->IF & SDIO_IF_BUFWRRDY_Msk) == 0) __NOP();
+	wait_while((SDIO->IF & SDIO_IF_BUFWRRDY_Msk) == 0);
     SDIO->IF = SDIO_IF_BUFWRRDY_Msk;		
     
     for(i = 0; i < 512/4; i++) SDIO->DATA = buff[i];
 	
-    while((SDIO->IF & SDIO_IF_TRXDONE_Msk) == 0) __NOP();
+    wait_while((SDIO->IF & SDIO_IF_TRXDONE_Msk) == 0);
 	SDIO->IF = SDIO_IF_TRXDONE_Msk;
 	
 	return SD_RES_OK;
@@ -186,13 +205,13 @@ uint32_t SDIO_MultiBlockWrite(uint32_t block_addr, uint16_t block_cnt, uint32_t 
 	
 	for(i = 0; i < block_cnt; i++)
 	{
-		while((SDIO->IF & SDIO_IF_BUFWRRDY_Msk) == 0) __NOP();
+		wait_while((SDIO->IF & SDIO_IF_BUFWRRDY_Msk) == 0);
 		SDIO->IF = SDIO_IF_BUFWRRDY_Msk;
 		
 		for(j = 0; j < 512/4; j++) SDIO->DATA = buff[i*(512/4) + j];
 	}
 	
-	while((SDIO->IF & SDIO_IF_TRXDONE_Msk) == 0) __NOP();
+	wait_while((SDIO->IF & SDIO_IF_TRXDONE_Msk) == 0);
 	SDIO->IF = SDIO_IF_TRXDONE_Msk;
 	
 	return SD_RES_OK;
@@ -221,7 +240,7 @@ uint32_t SDIO_DMABlockWrite(uint32_t block_addr, uint16_t block_cnt, uint32_t bu
 	if(res != SD_RES_OK)
 		return res;
 	
-	while((SDIO->IF & SDIO_IF_TRXDONE_Msk) == 0) __NOP();
+	wait_while((SDIO->IF & SDIO_IF_TRXDONE_Msk) == 0);
 	SDIO->IF = SDIO_IF_TRXDONE_Msk;
 	
 	return SD_RES_OK;
@@ -247,12 +266,12 @@ uint32_t SDIO_BlockRead(uint32_t block_addr, uint32_t buff[])
 	if(res != SD_RES_OK)
 		return res;
 	
-    while((SDIO->IF & SDIO_IF_BUFRDRDY_Msk) == 0) __NOP();
+    wait_while((SDIO->IF & SDIO_IF_BUFRDRDY_Msk) == 0);
 	SDIO->IF = SDIO_IF_BUFRDRDY_Msk;
     
     for(i = 0; i < 512/4; i++) buff[i] = SDIO->DATA;
     
-	while((SDIO->IF & SDIO_IF_TRXDONE_Msk) == 0) __NOP();
+	wait_while((SDIO->IF & SDIO_IF_TRXDONE_Msk) == 0);
 	SDIO->IF = SDIO_IF_TRXDONE_Msk;
 	
 	return SD_RES_OK;
@@ -281,13 +300,13 @@ uint32_t SDIO_MultiBlockRead(uint32_t block_addr, uint16_t block_cnt, uint32_t b
 	
 	for(i = 0; i < block_cnt; i++)
 	{
-		while((SDIO->IF & SDIO_IF_BUFRDRDY_Msk) == 0) __NOP();
+		wait_while((SDIO->IF & SDIO_IF_BUFRDRDY_Msk) == 0);
 		SDIO->IF = SDIO_IF_BUFRDRDY_Msk;
 		
 		for(j = 0; j < 512/4; j++) buff[i*(512/4) + j] = SDIO->DATA;
 	}
 	
-	while((SDIO->IF & SDIO_IF_TRXDONE_Msk) == 0) __NOP();
+	wait_while((SDIO->IF & SDIO_IF_TRXDONE_Msk) == 0);
 	SDIO->IF = SDIO_IF_TRXDONE_Msk;
 	
 	return SD_RES_OK;
@@ -316,7 +335,7 @@ uint32_t SDIO_DMABlockRead(uint32_t block_addr, uint16_t block_cnt, uint32_t buf
 	if(res != SD_RES_OK)
 		return res;
 	
-	while((SDIO->IF & SDIO_IF_TRXDONE_Msk) == 0) __NOP();
+	wait_while((SDIO->IF & SDIO_IF_TRXDONE_Msk) == 0);
 	SDIO->IF = SDIO_IF_TRXDONE_Msk;
 	
 	return SD_RES_OK;
@@ -337,7 +356,7 @@ uint32_t SDIO_DMABlockRead(uint32_t block_addr, uint16_t block_cnt, uint32_t buf
 * 注意事项: 无
 ******************************************************************************************************************************************/
 uint32_t _SDIO_SendCmd(uint32_t cmd, uint32_t arg, uint32_t resp_type, uint32_t *resp_data, uint32_t have_data, uint32_t data_read, uint16_t block_cnt, uint32_t use_dma)
-{	
+{
 	SDIO->BLK &= ~SDIO_BLK_COUNT_Msk;
 	SDIO->BLK |= (block_cnt << SDIO_BLK_COUNT_Pos);
 	
