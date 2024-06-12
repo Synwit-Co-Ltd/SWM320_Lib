@@ -56,11 +56,6 @@
 
 #define PLL_FB_DIV		60
 
-
-#define PLL_OUT_DIV8	0
-#define PLL_OUT_DIV4	1
-#define PLL_OUT_DIV2	2
-
 #define PLL_OUT_DIV		PLL_OUT_DIV8
 
 
@@ -78,6 +73,8 @@ uint32_t CyclesPerUs      = (__HSI / 1000000); 		//Cycles per micro second
 ******************************************************************************************************************************************/
 void SystemCoreClockUpdate(void)    
 {
+	uint32_t indiv, fbdiv, outdiv;
+	
 	if(SYS->CLKSEL & SYS_CLKSEL_SYS_Msk)			//SYS_CLK  <= HFCK
 	{
 		if(SYS->CLKSEL & SYS_CLKSEL_HFCK_Msk)			//HFCK <= XTAL
@@ -109,7 +106,11 @@ void SystemCoreClockUpdate(void)
 				SystemCoreClock = __HSE;
 			}
 			
-			SystemCoreClock = SystemCoreClock / PLL_IN_DIV * PLL_FB_DIV * 4 / (2 << (2 - PLL_OUT_DIV));
+			indiv  = (SYS->PLLDIV & SYS_PLLDIV_INDIV_Msk)  >> SYS_PLLDIV_INDIV_Pos;
+			fbdiv  = (SYS->PLLDIV & SYS_PLLDIV_FBDIV_Msk)  >> SYS_PLLDIV_FBDIV_Pos;
+			outdiv = (SYS->PLLDIV & SYS_PLLDIV_OUTDIV_Msk) >> SYS_PLLDIV_OUTDIV_Pos;
+			
+			SystemCoreClock = SystemCoreClock / indiv * fbdiv * 4 / (2 << (2 - outdiv));
 		}
 		else											//LFCK <= LRC
 		{
@@ -130,7 +131,7 @@ void SystemCoreClockUpdate(void)
 * 注意事项: 
 ******************************************************************************************************************************************/
 void SystemInit(void)
-{	
+{
 	SYS->CLKEN |= (1 << SYS_CLKEN_ANAC_Pos);
 	
 	Flash_Param_at_xMHz(120);
@@ -154,7 +155,7 @@ void SystemInit(void)
 			break;
 		
 		case SYS_CLK_PLL:			//4 片内锁相环输出
-			switchCLK_PLL();
+			switchCLK_PLL(SYS_PLL_SRC == SYS_CLK_XTAL, PLL_IN_DIV, PLL_FB_DIV, PLL_OUT_DIV);
 			break;
 	}
 	
@@ -163,23 +164,9 @@ void SystemInit(void)
 	
 	SystemCoreClockUpdate();
 	
-	if(SystemCoreClock > 80000000)
-	{
-		Flash_Param_at_xMHz(120);
-	}
-	else if(SystemCoreClock > 40000000)
-	{
-		Flash_Param_at_xMHz(80);
-	}
-	else if(SystemCoreClock > 30000000)
-	{
-		Flash_Param_at_xMHz(40);
-	}
-	else
-	{
-		Flash_Param_at_xMHz(30);
-	}
+	Flash_Param_at_xMHz(CyclesPerUs);
 }
+
 
 static void delay_3ms(void)
 {
@@ -196,8 +183,9 @@ static void delay_3ms(void)
 	}
 }
 
+
 void switchCLK_20MHz(void)
-{	
+{
 	SYS->HRCCR = (0 << SYS_HRCCR_OFF_Pos) |
 				 (0 << SYS_HRCCR_DBL_Pos);			//HRC = 20MHz
 	
@@ -208,7 +196,7 @@ void switchCLK_20MHz(void)
 }
 
 void switchCLK_40MHz(void)
-{	
+{
 	SYS->HRCCR = (0 << SYS_HRCCR_OFF_Pos) |
 				 (1 << SYS_HRCCR_DBL_Pos);			//HRC = 40MHz		
 	
@@ -219,7 +207,7 @@ void switchCLK_40MHz(void)
 }
 
 void switchCLK_32KHz(void)
-{	
+{
 	SYS->CLKEN |= (1 << SYS_CLKEN_RTCBKP_Pos);
 	
 	SYS->LRCCR &= ~(1 << SYS_LRCCR_OFF_Pos);
@@ -231,43 +219,35 @@ void switchCLK_32KHz(void)
 }
 
 void switchCLK_XTAL(void)
-{	
+{
 	SYS->XTALCR = (1 << SYS_XTALCR_EN_Pos);
 	
-	delay_3ms();
 	delay_3ms();
 	
 	SYS->CLKSEL |= (1 << SYS_CLKSEL_HFCK_Pos);		//HFCK  <=  XTAL
 	SYS->CLKSEL |= (1 << SYS_CLKSEL_SYS_Pos);		//SYS_CLK  <= HFCK
 }
 
-void switchCLK_PLL(void)
-{	
-	PLLInit();
-	
-	SYS->PLLCR |= (1 << SYS_PLLCR_OUTEN_Pos);
+void switchCLK_PLL(uint32_t clksrc_xtal, uint32_t indiv, uint32_t fbdiv, uint32_t outdiv)
+{
+	PLLInit(clksrc_xtal, indiv, fbdiv, outdiv);
 	
 	SYS->CLKSEL |= (1 << SYS_CLKSEL_LFCK_Pos);		//LFCK  <=  PLL
 	SYS->CLKSEL &= ~SYS_CLKSEL_SYS_Msk;				//SYS_CLK  <= LFCK
 }
 
-void PLLInit(void)
-{	
-	if(SYS_PLL_SRC == SYS_CLK_20MHz)
+void PLLInit(uint32_t clksrc_xtal, uint32_t indiv, uint32_t fbdiv, uint32_t outdiv)
+{
+	if(clksrc_xtal == 0)
 	{
 		SYS->HRCCR = (0 << SYS_HRCCR_OFF_Pos) |
 					 (0 << SYS_HRCCR_DBL_Pos);		//HRC = 20MHz
 		
-		delay_3ms();
-		
 		SYS->PLLCR |= (1 << SYS_PLLCR_INSEL_Pos);	//PLL_SRC <= HRC
 	}
-	else if(SYS_PLL_SRC == SYS_CLK_XTAL)
+	else
 	{
 		SYS->XTALCR = (1 << SYS_XTALCR_EN_Pos);
-		
-		delay_3ms();
-		delay_3ms();
 		
 		SYS->PLLCR &= ~(1 << SYS_PLLCR_INSEL_Pos);	//PLL_SRC <= XTAL
 	}
@@ -275,11 +255,13 @@ void PLLInit(void)
 	SYS->PLLDIV &= ~(SYS_PLLDIV_INDIV_Msk |
 					 SYS_PLLDIV_FBDIV_Msk |
 					 SYS_PLLDIV_OUTDIV_Msk);
-	SYS->PLLDIV |= (PLL_IN_DIV << SYS_PLLDIV_INDIV_Pos) |
-				   (PLL_FB_DIV << SYS_PLLDIV_FBDIV_Pos) |
-				   (PLL_OUT_DIV<< SYS_PLLDIV_OUTDIV_Pos);
+	SYS->PLLDIV |= (indiv  << SYS_PLLDIV_INDIV_Pos) |
+				   (fbdiv  << SYS_PLLDIV_FBDIV_Pos) |
+				   (outdiv << SYS_PLLDIV_OUTDIV_Pos);
 	
 	SYS->PLLCR &= ~(1 << SYS_PLLCR_OFF_Pos);
 	
 	while(SYS->PLLLOCK == 0);		//等待PLL锁定
+	
+	SYS->PLLCR |= (1 << SYS_PLLCR_OUTEN_Pos);
 }

@@ -67,31 +67,22 @@ void FLASH_Write(uint32_t addr, uint32_t buff[], uint32_t count)
 /****************************************************************************************************************************************** 
 * 函数名称: Flash_Param_at_xMHz()
 * 功能说明:	将Flash参数设置成xMHz主频下运行时所需的参数
-* 输    入: uint32_t x		可取值
+* 输    入: uint32_t xMHz
 * 输    出: 无
 * 注意事项: 无
 ******************************************************************************************************************************************/
-void Flash_Param_at_xMHz(uint32_t x)
+void Flash_Param_at_xMHz(uint32_t xMHz)
 {
 	__disable_irq();
-	switch(x)
-	{
-	case 30:
+	
+	if(xMHz <= 30)
 		IAP_Flash_Param(0x489, 0xabf41f25);
-		break;
-	
-	case 40:
+	else if(xMHz <= 40)
 		IAP_Flash_Param(0x489, 0xabf42929);
-		break;
-	
-	case 80:
+	else if(xMHz <= 80)
 		IAP_Flash_Param(0x489, 0xabf8524d);
-		break;
-	
-	case 120:
-	default:
+	else
 		IAP_Flash_Param(0x48a, 0xabfc7a6e);
-		break;
-	}
+	
 	__enable_irq();
 }

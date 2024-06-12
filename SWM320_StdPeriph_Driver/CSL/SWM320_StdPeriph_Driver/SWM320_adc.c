@@ -52,7 +52,7 @@ void ADC_Init(ADC_TypeDef * ADCx, ADC_InitStructure * initStruct)
 	}
 	else
 	{
-		if(SYS->PLLCR & SYS_PLLCR_OFF_Msk) PLLInit();
+		if(SYS->PLLCR & SYS_PLLCR_OFF_Msk) PLLInit(0, 5, 60, PLL_OUT_DIV8);
 		
 		ADCx->CTRL &= ~(1 << ADC_CTRL_CLKSRC_Pos);
 		
