@@ -34,11 +34,6 @@
 #define SYS_CLK   SYS_CLK_PLL
 
 
-#define SYS_CLK_DIV_1	0
-#define SYS_CLK_DIV_2	1
-
-#define SYS_CLK_DIV   	SYS_CLK_DIV_1
-
 
 #define __HSI		(20000000UL)		//高速内部时钟
 #define __LSI		(   32000UL)		//低速内部时钟
@@ -118,8 +113,6 @@ void SystemCoreClockUpdate(void)
 		}
 	}
 	
-	if(SYS->CLKDIV & SYS_CLKDIV_SYS_Msk) SystemCoreClock /= 2;
-	
 	CyclesPerUs = SystemCoreClock / 1000000;
 }
 
@@ -158,9 +151,6 @@ void SystemInit(void)
 			switchCLK_PLL(SYS_PLL_SRC == SYS_CLK_XTAL, PLL_IN_DIV, PLL_FB_DIV, PLL_OUT_DIV);
 			break;
 	}
-	
-	SYS->CLKDIV &= ~SYS_CLKDIV_SYS_Msk;
-	SYS->CLKDIV |= (SYS_CLK_DIV << SYS_CLKDIV_SYS_Pos);
 	
 	SystemCoreClockUpdate();
 	

@@ -188,8 +188,6 @@ typedef struct {
 #define SYS_CLKSEL_SYS_Pos			2		//系统时钟选择	0 LFCK	1 HFCK
 #define SYS_CLKSEL_SYS_Msk			(0x01 << SYS_CLKSEL_SYS_Pos)
 
-#define SYS_CLKDIV_SYS_Pos          0       //系统时钟分频  0 1分频    1 2分频
-#define SYS_CLKDIV_SYS_Msk          (0x01 << SYS_CLKDIV_SYS_Pos)
 #define SYS_CLKDIV_PWM_Pos          1       //PWM 时钟分频  0 1分频    1 8分频
 #define SYS_CLKDIV_PWM_Msk          (0x01 << SYS_CLKDIV_PWM_Pos)
 #define SYS_CLKDIV_SDRAM_Pos        2       //SDRAM时钟分频 0 1分频    1 2分频    2 4分频
