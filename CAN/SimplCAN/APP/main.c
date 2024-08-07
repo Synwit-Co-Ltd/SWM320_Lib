@@ -1,5 +1,7 @@
 #include "SWM320.h"
 
+CAN_RXMessage CAN_RXMsg;
+
 void SerialInit(void);
 
 int main(void)
@@ -21,7 +23,7 @@ int main(void)
 	CAN_initStruct.CAN_SJW = CAN_SJW_2tq;
 	CAN_initStruct.Baudrate = 100000;
 	CAN_initStruct.FilterMode = CAN_FILTER_32b;
-   	CAN_initStruct.FilterMask32b = 0xFFFFFFFF;
+   	CAN_initStruct.FilterMask32b = 0xFFFFFFFF;	//接受任意ID的帧
 	CAN_initStruct.FilterCheck32b = 0xFFFFFFFF;
 	CAN_initStruct.RXNotEmptyIEn = 0;
 	CAN_initStruct.RXOverflowIEn = 0;
@@ -31,13 +33,25 @@ int main(void)
 	
 	CAN_Open(CAN);
 	
+	CAN_Transmit(CAN, CAN_FRAME_STD, 0x122, tx_data, 8, 1);
+	while(CAN_TXComplete(CAN) == 0) __NOP();
+	
+	CAN_Transmit(CAN, CAN_FRAME_EXT, 0x122122, tx_data, 8, 1);
+	while(CAN_TXComplete(CAN) == 0) __NOP();
+	
+	while(CAN_RXDataAvailable(CAN))
+	{
+		CAN_Receive(CAN, &CAN_RXMsg);
+		
+		printf("\r\nReceive %s %08X: ", CAN_RXMsg.format == CAN_FRAME_STD ? "STD" : "EXT", CAN_RXMsg.id);
+		for(i = 0; i < CAN_RXMsg.size; i++) printf("%02X, ", CAN_RXMsg.data[i]);
+	}
+	
 	while(1==1)
 	{
-		CAN_Transmit(CAN, CAN_FRAME_STD, 0x3FF, tx_data, 8, 0);
-		
-		for(i = 0; i < 100000; i++);
 	}
 }
+
 
 void SerialInit(void)
 {

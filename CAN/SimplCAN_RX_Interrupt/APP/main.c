@@ -1,6 +1,21 @@
 #include "SWM320.h"
 
-CAN_RXMessage CAN_RXMsg;
+
+/* 错误处理演示步骤说明：
+	一、将 CAN 连接收发器但收发器不连接其他 CAN 节点，执行程序，通过串口助手会发现 CAN->TXERR 会从逐渐递增到 128，但此后不再递增，具体原因参考 CAN spec 上如下说明：
+	
+		3. When a TRANSMITTER sends an ERROR FLAG the TRANSMIT ERROR COUNT is increased by 8.
+
+		Exception 1:
+		If the TRANSMITTER is 'error passive' and detects an ACKNOWLEDGMENT ERROR because of not detecting
+		a 'dominant' ACK and does not detect a 'dominant' bit while sending its PASSIVE ERROR FLAG.
+	
+	二、此时 ACK ERROR 不再递增 CAN->TXERR，将 CAN 与收发器断开，触发 BIT ERROR，通过串口助手可发现 CAN->TXERR 继续递增到 256，
+		导致 CAN->SR.BUSOFF 和 CAN->CR.RST 置位，然后 CAN->TXERR 值变成 127，此时 CAN 节点处于 Bus Off 状态，CAN 控制器处于复位状态。
+	
+	三、CAN->CR.RST 被软件清零后，将 CAN 与收发器相连，CAN 节点退出 Bus Off 状态
+*/
+
 
 void SerialInit(void);
 
@@ -10,6 +25,7 @@ int main(void)
 {
 	uint32_t i;
 	CAN_InitStructure CAN_initStruct;
+	uint8_t tx_data[8] = {1, 2, 3, 4, 5, 6, 7, 8};
 	
 	SystemInit();
 	
@@ -69,38 +85,78 @@ int main(void)
 	CAN_initStruct.RXNotEmptyIEn = 1;
 	CAN_initStruct.RXOverflowIEn = 0;
 	CAN_initStruct.ArbitrLostIEn = 0;
-	CAN_initStruct.ErrPassiveIEn = 0;
+	CAN_initStruct.ErrPassiveIEn = 1;
 	CAN_Init(CAN, &CAN_initStruct);
+	
+	CAN_INTEn(CAN, CAN_IT_ERR_WARN | CAN_IT_RX_OVERFLOW);
 	
 	CAN_Open(CAN);
 	
-	printf("Hi from Synwit\r\n");
-	
 	while(1==1)
 	{
-		if(CAN_RXMsg.size > 0)
+		/* 注意：CAN->CR.RST == 1 时执行 CAN_Transmit() 会修改 Filter 设置，导致无法接收所需的 CAN 帧 */
+		while((CAN->CR & CAN_CR_RST_Msk) == 0)
 		{
-			printf("\r\nReceive %s: %08X, ", CAN_RXMsg.format == CAN_FRAME_STD ? "STD" : "EXT", CAN_RXMsg.id);
-			for(i = 0; i < CAN_RXMsg.size; i++) printf("%02X, ", CAN_RXMsg.data[i]);
+			CAN_Transmit(CAN, CAN_FRAME_STD, 0x60D, tx_data, 8, 1);
 			
-			CAN_RXMsg.size = 0;
-		}
-		else if(CAN_RXMsg.remote == 1)	//远程帧
-		{
-			printf("\r\nReceive %s Remote Request", CAN_RXMsg.format == CAN_FRAME_STD ? "STD" : "EXT");
+			while(CAN_TXComplete(CAN) == 0) __NOP();
 			
-			CAN_RXMsg.remote = 0;
+			printf("\r\nCAN->TXERR: %d\r\n", CAN->TXERR);
+			
+			for(i = 0; i < SystemCoreClock/16; i++) __NOP();
 		}
 	}
 }
 
 void CAN_Handler(void)
 {
+	uint32_t i;
 	uint32_t int_sr = CAN_INTStat(CAN);
 	
 	if(int_sr & CAN_IF_RXDA_Msk)
 	{
-		CAN_Receive(CAN, &CAN_RXMsg);
+		CAN_RXMessage msg;
+		
+		CAN_Receive(CAN, &msg);
+		
+		if(msg.size > 0)
+		{
+			printf("\r\nReceive %s: %08X, ", msg.format == CAN_FRAME_STD ? "STD" : "EXT", msg.id);
+			for(i = 0; i < msg.size; i++) printf("%02X, ", msg.data[i]);
+		}
+		else if(msg.remote == 1)	//远程帧
+		{
+			printf("\r\nReceive %s Remote Request", msg.format == CAN_FRAME_STD ? "STD" : "EXT");
+		}
+	}
+	
+	if(int_sr & CAN_IF_RXOV_Msk)
+	{
+		printf("\r\nCAN RX Overflow\r\n");
+		
+		CAN_Close(CAN);
+		for(i = 0; i < CyclesPerUs; i++) __NOP();
+		CAN_Open(CAN);
+	}
+	
+	if(int_sr & CAN_IF_ERRWARN_Msk)
+	{
+		if(CAN->SR & CAN_SR_BUSOFF_Msk)
+		{
+			printf("\r\nCAN Bus Off\r\n");
+			printf("\r\nCAN->CR.RST = %d\r\n", CAN->CR & CAN_CR_RST_Msk ? 1 : 0);	// 发生 BusOff 时 CR.RST 自动置位，进入复位模式
+			
+			CAN_Open(CAN);			// 清除 CR.RST 位，退出复位模式，进入正常工作模式
+		}
+		else if(CAN->SR & CAN_SR_ERRWARN_Msk)
+		{
+			printf("\r\nCAN Error Warning\r\n");
+		}
+	}
+	
+	if(int_sr & CAN_IF_ERRPASS_Msk)
+	{
+		printf("\r\nCAN Error Passive\r\n");
 	}
 }
 

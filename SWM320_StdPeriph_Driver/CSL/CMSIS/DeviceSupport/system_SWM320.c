@@ -45,7 +45,7 @@
  * PLL输出频率 = PLL输入时钟 / INDIV * 4 * FBDIV / OUTDIV = VCO输出频率 / OUTDIV    
  * 注意：VCO输出频率需要在 [600MHz, 1200MHz] 之间
  *****************************************************************************************/ 
-#define SYS_PLL_SRC   	SYS_CLK_20MHz	//可取值SYS_CLK_20MHz、SYS_CLK_XTAL
+#define SYS_PLL_SRC   	SYS_CLK_XTAL	//可取值SYS_CLK_20MHz、SYS_CLK_XTAL
 
 #define PLL_IN_DIV		5
 
