@@ -14,10 +14,10 @@ typedef void (*IAP_Flash_Param_t)(uint32_t cfg0, uint32_t cfg1);
 typedef void (*IAP_Flash_Erase_t)(uint32_t sector);
 typedef void (*IAP_Flash_Write_t)(uint32_t flash_addr, uint32_t ram_addr, uint32_t count);
 
-extern IAP_Cache_Reset_t IAP_Cache_Reset;
-extern IAP_Flash_Param_t IAP_Flash_Param;
-extern IAP_Flash_Erase_t IAP_Flash_Erase;
-extern IAP_Flash_Write_t IAP_Flash_Write;
+extern const IAP_Cache_Reset_t IAP_Cache_Reset;
+extern const IAP_Flash_Param_t IAP_Flash_Param;
+extern const IAP_Flash_Erase_t IAP_Flash_Erase;
+extern const IAP_Flash_Write_t IAP_Flash_Write;
 
 
 #endif //__SWM320_FLASH_H__

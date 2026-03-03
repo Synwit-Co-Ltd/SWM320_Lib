@@ -20,10 +20,10 @@
 #include "SWM320_flash.h"
 
 
-IAP_Cache_Reset_t IAP_Cache_Reset = (IAP_Cache_Reset_t)0x11000601;
-IAP_Flash_Param_t IAP_Flash_Param = (IAP_Flash_Param_t)0x11000681;
-IAP_Flash_Erase_t IAP_Flash_Erase = (IAP_Flash_Erase_t)0x11000781;
-IAP_Flash_Write_t IAP_Flash_Write = (IAP_Flash_Write_t)0x11000801;
+const IAP_Cache_Reset_t IAP_Cache_Reset = (IAP_Cache_Reset_t)0x11000601;
+const IAP_Flash_Param_t IAP_Flash_Param = (IAP_Flash_Param_t)0x11000681;
+const IAP_Flash_Erase_t IAP_Flash_Erase = (IAP_Flash_Erase_t)0x11000781;
+const IAP_Flash_Write_t IAP_Flash_Write = (IAP_Flash_Write_t)0x11000801;
 
 
 /****************************************************************************************************************************************** 
