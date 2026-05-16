@@ -3218,4 +3218,19 @@ typedef void (* Func_void_void) (void);
 #endif
 
 
+static __INLINE uint32_t SW_enter_critical(void)
+{
+	uint32_t primask = __get_PRIMASK();
+	
+	__disable_irq();
+	
+	return primask;
+}
+
+static __INLINE void SW_exit_critical(uint32_t primask)
+{
+	__set_PRIMASK(primask);
+}
+
+
 #endif //__SWM320_H__
