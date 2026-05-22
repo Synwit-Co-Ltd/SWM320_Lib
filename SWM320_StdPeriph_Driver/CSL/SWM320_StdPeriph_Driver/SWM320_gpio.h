@@ -16,21 +16,21 @@ void GPIO_SetBit(GPIO_TypeDef * GPIOx, uint32_t n);						//½«²ÎÊýÖ¸¶¨µÄÒý½ÅµçÆ½Ö
 void GPIO_ClrBit(GPIO_TypeDef * GPIOx, uint32_t n);						//½«²ÎÊýÖ¸¶¨µÄÒý½ÅµçÆ½ÖÃµÍ
 void GPIO_InvBit(GPIO_TypeDef * GPIOx, uint32_t n);						//½«²ÎÊýÖ¸¶¨µÄÒý½ÅµçÆ½·´×ª
 uint32_t GPIO_GetBit(GPIO_TypeDef * GPIOx, uint32_t n);					//¶ÁÈ¡²ÎÊýÖ¸¶¨µÄÒý½ÅµÄµçÆ½×´Ì¬
+
 void GPIO_SetBits(GPIO_TypeDef * GPIOx, uint32_t n, uint32_t w);		//½«²ÎÊýÖ¸¶¨µÄ´Ón¿ªÊ¼µÄwÎ»Á¬ÐøÒý½ÅµÄµçÆ½ÖÃ¸ß
 void GPIO_ClrBits(GPIO_TypeDef * GPIOx, uint32_t n, uint32_t w);		//½«²ÎÊýÖ¸¶¨µÄ´Ón¿ªÊ¼µÄwÎ»Á¬ÐøÒý½ÅµÄµçÆ½ÖÃµÍ
 void GPIO_InvBits(GPIO_TypeDef * GPIOx, uint32_t n, uint32_t w);		//½«²ÎÊýÖ¸¶¨µÄ´Ón¿ªÊ¼µÄwÎ»Á¬ÐøÒý½ÅµÄµçÆ½·´×ª
 uint32_t GPIO_GetBits(GPIO_TypeDef * GPIOx, uint32_t n, uint32_t w);	//¶ÁÈ¡²ÎÊýÖ¸¶¨µÄ´Ón¿ªÊ¼µÄwÎ»Á¬ÐøÒý½ÅµÄµçÆ½×´Ì¬
 
 
-void GPIO_AtomicSetBits(GPIO_TypeDef * GPIOx, uint32_t n, uint32_t w);
-void GPIO_AtomicClrBits(GPIO_TypeDef * GPIOx, uint32_t n, uint32_t w);
-void GPIO_AtomicInvBits(GPIO_TypeDef * GPIOx, uint32_t n, uint32_t w);
-
-
 // for compatibility
 #define GPIO_AtomicSetBit	GPIO_SetBit
 #define GPIO_AtomicClrBit	GPIO_ClrBit
 #define GPIO_AtomicInvBit	GPIO_InvBit
+
+#define GPIO_AtomicSetBits(GPIOx, n, w)	{ uint32_t primask = SW_enter_critical(); GPIO_SetBits(GPIOx, n, w); SW_exit_critical(primask); }
+#define GPIO_AtomicClrBits(GPIOx, n, w)	{ uint32_t primask = SW_enter_critical(); GPIO_ClrBits(GPIOx, n, w); SW_exit_critical(primask); }
+#define GPIO_AtomicInvBits(GPIOx, n, w)	{ uint32_t primask = SW_enter_critical(); GPIO_InvBits(GPIOx, n, w); SW_exit_critical(primask); }
 
 
 #endif //__SWM320_GPIO_H__
