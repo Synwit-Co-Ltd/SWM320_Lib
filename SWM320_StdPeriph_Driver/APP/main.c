@@ -4,8 +4,6 @@ void SerialInit(void);
 
 int main(void)
 {
- 	uint32_t i;
- 	
  	SystemInit();
 	
 	SerialInit();
@@ -21,9 +19,10 @@ int main(void)
  	{
  		GPIO_InvBit(GPIOA, PIN4);
  		GPIO_InvBit(GPIOA, PIN5);
-  		for(i=0; i<5000000; i++) i=i;
-			
+		
     	printf("Hi, World!\r\n");
+		
+		SW_DelayMS(500);
  	}
 }
 

@@ -29,6 +29,10 @@ extern void switchCLK_PLL(uint32_t clksrc_xtal, uint32_t indiv, uint32_t fbdiv, 
 extern void PLLInit(uint32_t clksrc_xtal, uint32_t indiv, uint32_t fbdiv, uint32_t outdiv);
 
 
+void SW_DelayUS(uint32_t us);
+void SW_DelayMS(uint32_t ms);
+
+
 #ifdef __cplusplus
 }
 #endif

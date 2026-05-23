@@ -3218,23 +3218,6 @@ typedef void (* Func_void_void) (void);
 #endif
 
 
-static __INLINE void SW_DelayUS(uint32_t us)
-{
-	int i;
-	
-	us = CyclesPerUs * us / 4;
-	
-	for(i = 0; i < us; i++) __NOP();
-}
-
-static __INLINE void SW_DelayMS(uint32_t ms)
-{
-	int i;
-	
-	for(i = 0; i < ms; i++) SW_DelayUS(1000);
-}
-
-
 static __INLINE uint32_t SW_enter_critical(void)
 {
 	uint32_t primask = __get_PRIMASK();
